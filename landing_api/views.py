@@ -23,13 +23,26 @@ class LandingAPI(APIView):
     def post(self, request):
 
       data = request.data
+      format = ["email", "user", "message"]
+      counter = 0
+
+      for key in data:
+        if key not in format:
+            return Response({"error": f"Invalid field: {key}"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            counter += 1
+
+      if counter != len(format):
+          return Response({"error": "Missing fields"}, status=status.HTTP_400_BAD_REQUEST)
 
       # Referencia a la colección
       ref = db.reference(f'{self.collection_name}')
 
       current_time  = datetime.now()
-      custom_format = current_time.strftime("%d/%m/%Y, %I:%M:%S %p").lower().replace('am', 'a. m.').replace('pm', 'p. m.')
-      data.update({"timestamp": custom_format })
+      #custom_format = current_time.strftime("%d/%m/%Y, %I:%M:%S %p").lower().replace('am', 'a. m.').replace('pm', 'p. m.')
+      custom_format = current_time.strftime("%Y-%m-%dT%H:%M:%S") + f".{current_time.microsecond // 1000:03d}Z"
+
+      data.update({"date": custom_format })
 
       # push: Guarda el objeto en la colección
       new_resource = ref.push(data)
